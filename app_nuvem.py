@@ -7,17 +7,19 @@ URL_NUVEM = "https://gcgmztsqtqgqhsvqzncz.supabase.co"
 KEY_NUVEM = "sb_publishable_MfxiCv7gYIk-kJvD1xjlZw_9q2Jvz9A"
 supabase = create_client(URL_NUVEM, KEY_NUVEM)
 
-# MUDEI O NOME AQUI PARA RSF:
 st.set_page_config(page_title="RSF Cloud", page_icon="📸")
 st.title("🔧 RSF CRM Mobile")
 
-# O Streamlit vai procurar no link se existe algum número enviado pelo telemóvel
+# --- A MAGIA DO TELEFONE ---
+# O programa vai procurar se o MacroDroid enviou algum número no link
 numero_chamada = st.query_params.get("telefone", "")
 
 with st.form("form_oficina"):
+    # AQUI ESTÁ O NOVO CAMPO DO TELEFONE (Já preenchido se vier do link!)
     telefone = st.text_input("Telefone do Cliente", value=numero_chamada)
+    
     oficina = st.text_input("Nome da Oficina / Cliente*")
-    servico = st.selectbox("Serviço", ["Manutenção", "Reparação", "Montagem", "Orçamento"])
+    servico = st.selectbox("Serviço", ["Manutenção Preventiva", "Reparação Urgente", "Montagem", "Orçamento"])
     
     st.write("---")
     foto = st.camera_input("📸 Tirar Foto ao Autocolante (Opcional)") 
@@ -26,11 +28,11 @@ with st.form("form_oficina"):
     if st.form_submit_button("ENVIAR PARA O ESCRITÓRIO"):
         if oficina: 
             try:
-                obs_final = f"TEL: {telefone} | "
+                # Junta o telefone às observações para o PC conseguir ler depois
+                obs_final = f"TEL: {telefone} | " if telefone else "TEL: S/N | "
+                
                 if foto:
                     nome_f = f"{oficina.replace(' ','_')}_{datetime.now().strftime('%H%M%S')}.jpg"
-                    # Nota: Mantive o nome do "balde" das fotos como "fotos-gauto" 
-                    # para não termos de ir ao Supabase mudar configurações e dar erro!
                     supabase.storage.from_("fotos-gauto").upload(nome_f, foto.getvalue())
                     obs_final += f"FOTO_PENDENTE:{nome_f} | {notas}"
                 else:
@@ -44,6 +46,6 @@ with st.form("form_oficina"):
                 }).execute()
                 st.success("✅ Guardado! O PC vai descarregar tudo.")
             except Exception as e:
-                st.error(f"Erro: {e}")
+                st.error(f"Erro ao enviar: {e}")
         else:
             st.error("⚠️ O Nome da oficina é obrigatório!")
